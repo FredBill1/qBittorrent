@@ -34,7 +34,7 @@ import io
 import os
 import re
 import socket
-import socks
+import socks as sockslib
 import ssl
 import sys
 import tempfile
@@ -68,9 +68,9 @@ if "sock_proxy" in os.environ and len(os.environ["sock_proxy"].strip()) > 0:
     m = re.match(r"^(?:(?P<username>[^:]+):(?P<password>[^@]+)@)?(?P<host>[^:]+):(?P<port>\w+)$",
                  proxy_str)
     if m is not None:
-        socks.setdefaultproxy(socks.PROXY_TYPE_SOCKS5, m.group('host'),
-                              int(m.group('port')), True, m.group('username'), m.group('password'))
-        socket.socket = socks.socksocket  # type: ignore[misc]
+        auth = sockslib.NoAuth() if m.group('username') is None else sockslib.UserPassAuth(m.group('username'), m.group('password'))
+        sockslib.set_default_proxy((m.group('host'), int(m.group('port'))), auth=[auth])
+        socket.socket = sockslib.SocksSocket  # type: ignore[misc]
 
 
 # This is only provided for backward compatibility, new code should not use it
